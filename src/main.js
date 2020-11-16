@@ -12,6 +12,7 @@ import './styles/index.less'
 
 Vue.config.productionTip = false
 
+// 全局注册 element 组件库
 Vue.use(ElementUI)
 
 new Vue({
