@@ -86,6 +86,12 @@ export default {
 
       // 关闭 loading
       this.loginLoading = false
+
+      // this.$router.push('/')
+
+      this.$router.push({
+        name: 'home'
+      })
     },
     login () {
       // 验证通过
