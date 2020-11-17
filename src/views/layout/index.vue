@@ -1,12 +1,17 @@
 <template>
   <div>
     <el-container class="layout-container">
-      <!-- <el-aside class="aside" width="200px">Aside</el-aside> -->
-      <app-aside class="aside-menu"></app-aside>
+      <el-aside class="aside" width="auto">
+        <app-aside class="aside-menu" :is-collapse="isCollapse"></app-aside>
+      </el-aside>
       <el-container>
         <el-header class="header">
           <div>
-            <i class="el-icon-s-fold"></i>
+            <i :class="{
+              'el-icon-s-fold' : isCollapse,
+              'el-icon-s-unfold' : !isCollapse
+            }"
+            @click="isCollapse = !isCollapse"></i>
             <span>中国传媒科技有限公司</span>
           </div>
           <el-dropdown>
@@ -17,7 +22,7 @@
             </div>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item>设置</el-dropdown-item>
-              <el-dropdown-item>退出</el-dropdown-item>
+              <el-dropdown-item @click.native="onLogout">退出</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </el-header>
@@ -43,7 +48,8 @@ export default {
   },
   data () {
     return {
-      user: {} // 当前用户登陆信息
+      user: {}, // 当前用户登陆信息
+      isCollapse: false // 侧边菜单栏展开状态
     }
   },
   created () {
@@ -53,6 +59,23 @@ export default {
     loadUserProfile () {
       getUserProfile().then(res => {
         this.user = res.data.data
+      })
+    },
+    onLogout () {
+      this.$confirm('确认退出吗?', '退出提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 清除用户状态
+        window.localStorage.removeItem('user')
+        // 跳转到登录页面
+        this.$router.push('/login')
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消退出'
+        })
       })
     }
   }

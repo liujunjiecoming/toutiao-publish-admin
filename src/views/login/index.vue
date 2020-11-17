@@ -36,8 +36,8 @@ export default {
   data () {
     return {
       user: {
-        mobile: '',
-        code: '',
+        mobile: '13911111111',
+        code: '246810',
         agree: false
       },
       // checked: false, // 是否同意协议的选中状态
@@ -106,6 +106,17 @@ export default {
 
         // 关闭 loading
         this.loginLoading = false
+
+        // 接口返回的用户相关数据放到本地存储，方便应用数据共享
+        // 本地存储智能存字符串，其他转为JSON格式字符串
+        window.localStorage.setItem('user', JSON.stringify(res.data.data))
+
+        // 跳转到首页
+        // this.$router.push('/')
+
+        this.$router.push({
+          name: 'home'
+        })
       }).catch(err => {
         console.log('登录失败', err)
         this.$message({
