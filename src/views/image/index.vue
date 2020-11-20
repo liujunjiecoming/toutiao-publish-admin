@@ -30,11 +30,27 @@
             fit="cover"
             ></el-image>
             <div class="image-action">
-              <i :class="{
+              <el-button
+                type="warning"
+                :icon="img.is_collected ? 'el-icon-star-on' : 'el-icon-star-off'"
+                size="mini"
+                circle
+                @click="onCollect(img)"
+                :loading="img.loading"
+              ></el-button>
+              <!-- <i :class="{
                 'el-icon-star-on': img.is_collected,
                 'el-icon-star-off': !img.is_collected
-              }"></i>
-              <i class="el-icon-delete-solid"></i>
+              }" @click="onCollect(img)"></i> -->
+              <el-button
+                type="danger"
+                icon="el-icon-delete"
+                circle
+                size="mini"
+                :loading="img.loading"
+                @click="onDelete(img)"
+                >
+              </el-button>
             </div>
         </el-col>
       </el-row>
@@ -69,7 +85,7 @@
 </template>
 
 <script>
-import { getImages } from '@/api/image'
+import { getImages, collectImage, deleteImage } from '@/api/image'
 
 export default {
   name: 'ImageIndex',
@@ -83,7 +99,7 @@ export default {
         Authorization: `Bearer ${user.token}`
       },
       totalCount: 0,
-      pageSize: 5,
+      pageSize: 20,
       page: 1
     }
   },
@@ -101,7 +117,13 @@ export default {
           per_page: this.pageSize
         }
       ).then(res => {
-        this.images = res.data.data.results
+        const results = res.data.data.results
+        // img 对象本身没有 loading 数据
+        // 我们这里收到的往里面添加该数据是用来控制每个收藏按钮的 loading 状态
+        results.forEach(img => {
+          img.loading = false
+        })
+        this.images = results
         this.totalCount = res.data.data.total_count
       })
     },
@@ -114,6 +136,31 @@ export default {
     },
     onCurrentPage (page) {
       this.loadImages(page)
+    },
+    onCollect (img) {
+      // 展示 loading
+      img.loading = true
+      collectImage(img.id, !img.is_collected).then(res => {
+        img.is_collected = !img.is_collected
+
+        // 关闭 loading
+        img.loading = false
+      })
+      // console.log(img)
+      // if (img.is_collected) {
+      //   // 已收藏，取消收藏
+      //   collectImage(img.id, true)
+      // } else {
+      //   // 没有收藏，添加收藏
+      //   collectImage(img.id, false)
+      // }
+    },
+    onDelete (img) {
+      img.loading = true
+      deleteImage(img.id).then(res => {
+        this.loadImages(this.page)
+        img.loading = false
+      })
     }
   }
 }
