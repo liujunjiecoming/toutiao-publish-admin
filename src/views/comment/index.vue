@@ -42,6 +42,7 @@
                 active-color="#13ce66"
                 inactive-color="#ff4949"
                 @change="onStatusChange(scope.row)"
+                :disabled="scope.row.statusDiasbled"
                 >
               </el-switch>
             </template>
@@ -50,11 +51,11 @@
         <el-pagination
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
-          :current-page="1"
-          :page-sizes="[100, 200, 300, 400]"
-          :page-size="100"
+          :current-page.sync="page"
+          :page-sizes="[10, 20, 30, 40]"
+          :page-size.sync="pageSize"
           layout="total, sizes, prev, pager, next, jumper"
-          :total="400"
+          :total="totalCount"
           background>
         </el-pagination>
       </div>
@@ -63,30 +64,60 @@
 </template>
 
 <script>
-import { getArticle } from '@/api/article'
+import { getArticle, updateCommentStatus } from '@/api/article'
 
 export default {
   name: 'CommentIndex',
   data () {
     return {
-      articles: [] // 评论列表
+      articles: [], // 评论列表
+      totalCount: 0, // 总数据条数
+      pageSize: 30,
+      page: 1 // 当前激活的页码
     }
   },
   created () {
     this.loadComments()
   },
   methods: {
-    handleSizeChange () { },
-    handleCurrentChange () { },
-    loadComments () {
+    handleSizeChange () {
+      this.loadComments(1)
+    },
+    handleCurrentChange (page) {
+      this.loadComments(page)
+    },
+    loadComments (page = 1) {
+      // 分页页码和请求数据页码保持一致
+      this.page = page
       getArticle({
-        response_type: 'comment'
+        response_type: 'comment',
+        page,
+        per_page: this.pageSize
       }).then(res => {
-        this.articles = res.data.data.results
+        const { results } = res.data.data
+        results.forEach(article => {
+          article.statusDiasbled = false
+        })
+        this.articles = results
+        this.totalCount = res.data.data.total_count
       })
     },
     onStatusChange (article) {
-      console.log(article)
+      // 禁用开关
+      article.statusDiasbled = true
+
+      // 请求提交修改
+      updateCommentStatus(article.id.toString(), article.comment_status).then(res => {
+        console.log(res)
+
+        // 启用开关
+        article.statusDiasbled = false
+
+        this.$message({
+          type: 'success',
+          message: article.comment_status ? '开启文章评论状态' : '关闭文章评论状态'
+        })
+      })
     }
   }
 }
